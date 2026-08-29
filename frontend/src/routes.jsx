@@ -1,5 +1,7 @@
 import { Routes, Route } from "react-router-dom";
 import Grantscreen from "./pages/Grantscreen";
+import PaymentScreen from "./pages/Paymentscreen";
+import ActivityScreen from "./pages/Activityscreen";
 
 // import Home from "./pages/Home";
 // import ScreenTwo from "./pages/ScreenTwo";
@@ -10,6 +12,8 @@ const AppRoutes = () => {
     return (
         <Routes>
             <Route path="/" element={<Grantscreen />} />
+            <Route path="/payment" element={<PaymentScreen />} />
+            <Route path="/activity" element={<ActivityScreen />} />
             {/* <Route path="/screen-two" element={<ScreenTwo />} />
             <Route path="/screen-three" element={<ScreenThree />} />
             <Route path="/screen-four" element={<ScreenFour />} /> */}

@@ -1,5 +1,7 @@
 import React, { useEffect, useState, useRef } from "react";
 import { Check, X, Plus, Sparkles } from "lucide-react";
+import Loader from "../components/loader";
+import { useNavigate } from "react-router-dom";
 
 // ---- Groww brand token system ----
 const C = {
@@ -400,10 +402,12 @@ function SectionLabel({ title, sub }) {
 }
 
 export default function GrantScreen() {
+  const navigate = useNavigate();
   const [goal, setGoal] = useState("");
   const [additionalInstruction, setAdditionalInstruction] =
     useState("");
-
+  const [loading, setLoading] = useState(false);
+  const [progress, setProgress] = useState(0);
   const [risk, setRisk] = useState("Moderate");
   const [amount, setAmount] = useState(50000);
   const [horizon, setHorizon] = useState("Long-term");
@@ -493,7 +497,6 @@ export default function GrantScreen() {
   ]);
 
   const [confirmed, setConfirmed] = useState(false);
-  const [submitted, setSubmitted] = useState(false);
 
   const setPermState = (id, state) => {
     setPermissions((prev) =>
@@ -660,6 +663,23 @@ export default function GrantScreen() {
       })
     );
   };
+  const handleGrantAccess = () => {
+  navigate("/payment", {
+    state: {
+      amount: Number(amount) || 0,
+      goal,
+      risk,
+      horizon,
+      additionalInstruction,
+      permissions,
+      sectorLimits,
+    },
+  });
+};
+
+    // if (loading) {
+    //     return <Loader percent={progress} />;
+    // }
 
   return (
     <div
@@ -739,19 +759,7 @@ export default function GrantScreen() {
       `}</style>
 
       {/* Status bar */}
-      <div
-        style={{
-          padding: "10px 0 0 0",
-          display: "flex",
-          justifyContent: "space-between",
-          fontSize: 11,
-          color: C.slateLight,
-          fontWeight: 600,
-        }}
-      >
-        <span>9:41</span>
-        <span>●●●●</span>
-      </div>
+      
 
       {/* Header */}
       <div
@@ -1659,7 +1667,31 @@ export default function GrantScreen() {
           borderTop: `1px solid ${C.border}`,
         }}
       >
-        {submitted ? (
+        <button
+          disabled={!canSubmit}
+          onClick={handleGrantAccess}
+          style={{
+            width: "100%",
+            padding: "14px 0",
+            borderRadius: 14,
+            border: "none",
+            background: canSubmit
+              ? C.primary
+              : "#EFEFEF",
+            color: canSubmit
+              ? "#FFFFFF"
+              : "#B7BABD",
+            fontWeight: 700,
+            fontSize: 15,
+            fontFamily: FONT,
+            cursor: canSubmit
+              ? "pointer"
+              : "default",
+          }}
+        >
+          Grant access
+        </button>
+        {/* {submitted ? (
           <div
             style={{
               display: "flex",
@@ -1720,7 +1752,7 @@ export default function GrantScreen() {
           >
             Grant access
           </button>
-        )}
+        )} */}
       </div>
     </div>
   );
