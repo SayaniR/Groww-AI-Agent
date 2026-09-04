@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useRef } from "react";
 import { Check, X, Plus, Sparkles } from "lucide-react";
 import Loader from "../components/loader";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 
 // ---- Groww brand token system ----
 const C = {
@@ -24,7 +24,7 @@ const FONT_DISPLAY =
 
 // Body / Interface
 const FONT =
-  "Roboto, -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif";
+  "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif";
 
 function formatINR(n) {
   if (n === "" || n === null || n === undefined) return "";
@@ -106,10 +106,10 @@ function PermissionRow({
   const thresholdLabel =
     perm.thresholdType === "₹"
       ? perm.threshold === 0
-        ? "Set spending limit"
+        ? "Set limit per transaction"
         : `up to ₹${formatINR(perm.threshold)}`
       : perm.threshold === 0
-        ? "Set limit"
+        ? "Set limit per transaction"
         : `up to ${perm.threshold}%`;
 
   const isAtMax =
@@ -403,13 +403,15 @@ function SectionLabel({ title, sub }) {
 
 export default function GrantScreen() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const state = location.state
   const [goal, setGoal] = useState("");
   const [additionalInstruction, setAdditionalInstruction] =
     useState("");
   const [loading, setLoading] = useState(false);
   const [progress, setProgress] = useState(0);
   const [risk, setRisk] = useState("Moderate");
-  const [amount, setAmount] = useState(50000);
+  const [amount, setAmount] = useState(state?.amount || "");
   const [horizon, setHorizon] = useState("Long-term");
 
   const [sectorMode, setSectorMode] = useState("all");
@@ -450,19 +452,19 @@ export default function GrantScreen() {
   ]);
 
   const [permissions, setPermissions] = useState([
-    {
-      id: "research",
-      label: "Research & compare stocks",
-      state: "yes",
-      hasThreshold: false,
-    },
+    // {
+    //   id: "research",
+    //   label: "Research & compare stocks",
+    //   state: "yes",
+    //   hasThreshold: false,
+    // },
 
-    {
-      id: "analyze",
-      label: "Analyze my portfolio",
-      state: "yes",
-      hasThreshold: false,
-    },
+    // {
+    //   id: "analyze",
+    //   label: "Analyze my portfolio",
+    //   state: "yes",
+    //   hasThreshold: false,
+    // },
 
     {
       id: "rebalance",
@@ -570,7 +572,7 @@ export default function GrantScreen() {
   const quickAdds = [5000, 10000, 50000];
 
   const canSubmit =
-    goal.trim().length > 0 &&
+    // goal.trim().length > 0 &&
     Number(amount) > 0 &&
     confirmed;
 
@@ -773,6 +775,7 @@ export default function GrantScreen() {
             alignItems: "center",
             gap: 8,
             marginBottom: 4,
+            fontFamily: FONT
           }}
         >
           <div
@@ -798,6 +801,7 @@ export default function GrantScreen() {
               fontSize: 12.5,
               fontWeight: 700,
               color: C.slate,
+              fontFamily: FONT
             }}
           >
             GROWW AGENT

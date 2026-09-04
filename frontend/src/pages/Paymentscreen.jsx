@@ -13,7 +13,7 @@ const C = {
 };
 
 const FONT =
-    "Roboto, -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif";
+    "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif";
 
 function formatINR(value) {
     if (value === "" || value === null || value === undefined) {

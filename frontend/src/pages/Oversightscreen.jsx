@@ -16,7 +16,7 @@ import {
   Clock,
 } from "lucide-react";
 import { ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
 // -----------------------------------------------------
 // Groww tokens
@@ -441,41 +441,19 @@ function BuySellActivityCard({
 }
 
 // -----------------------------------------------------
-// Buy / Sell result
+// Buy / Sell result — this build demonstrates the SELL checkpoint,
+// landed on directly from a notification tap (no evaluation delay —
+// the decision is already waiting when the screen mounts).
 // -----------------------------------------------------
 
-function ResultItem({ name, detail, amount }) {
-  return (
-    <div
-      style={{
-        display: "flex",
-        justifyContent: "space-between",
-        alignItems: "flex-start",
-        padding: "8px 0",
-        borderBottom: `1px solid ${C.border}`,
-      }}
-    >
-      <div>
-        <div style={{ fontSize: 13, fontWeight: 700, color: "#000" }}>
-          {name}
-        </div>
-        <div style={{ fontSize: 11.5, color: C.slate, marginTop: 2 }}>
-          {detail}
-        </div>
-      </div>
-      <div style={{ fontSize: 12.5, fontWeight: 700, color: "#000" }}>
-        {amount}
-      </div>
-    </div>
-  );
-}
-
-function BuySellResult({ budget = 50000, paused = false }) {
+function SellResult({ budget = 50000, paused = false }) {
   const [allocated, setAllocated] = useState(32000);
   const [expanded, setExpanded] = useState(true);
   // 'pending' | 'approved' | 'rejected' | 'expired'
   const [decision, setDecision] = useState("pending");
-  const [showAction, setShowAction] = useState(false);
+  // Landed on directly from the notification — the checkpoint is already
+  // waiting, so no artificial "still evaluating" delay before it appears.
+  const [showAction] = useState(true);
   const [secondsLeft, setSecondsLeft] = useState(30);
   const [chipVisible, setChipVisible] = useState(true);
 
@@ -483,13 +461,6 @@ function BuySellResult({ budget = 50000, paused = false }) {
   const stockName = "HDFC Bank";
 
   const evaluating = ["Tata Motors", "Reliance", "HDFC Bank"];
-
-  // Simulate the agent finishing its evaluation before it surfaces the
-  // decision that needs the user's review.
-  useEffect(() => {
-    const timer = setTimeout(() => setShowAction(true), 2500);
-    return () => clearTimeout(timer);
-  }, []);
 
   // 30-second countdown once the action-required card appears. If no
   // decision is made in time (and the agent isn't paused), auto-dismiss it.
@@ -510,7 +481,8 @@ function BuySellResult({ budget = 50000, paused = false }) {
   }, [showAction, decision, paused, secondsLeft]);
 
   const handleApprove = () => {
-    setAllocated((a) => Math.min(budget, a + pendingAmount));
+    // Selling reduces what's currently allocated in the market.
+    setAllocated((a) => Math.max(0, a - pendingAmount));
     setDecision("approved");
     setExpanded(false);
   };
@@ -546,7 +518,7 @@ function BuySellResult({ budget = 50000, paused = false }) {
       }}
     >
       {/* Selected stocks */}
-      {/* <div
+      <div
         style={{
           display: "flex",
           alignItems: "center",
@@ -558,7 +530,7 @@ function BuySellResult({ budget = 50000, paused = false }) {
         <span style={{ fontSize: 14.5, fontWeight: 700, color: "#000" }}>
           Selected 4 stocks
         </span>
-      </div> */}
+      </div>
 
       {/* Progress */}
       <div style={{ fontSize: 13, color: C.slate, marginBottom: 8 }}>
@@ -590,16 +562,14 @@ function BuySellResult({ budget = 50000, paused = false }) {
       </div>
 
       {/* Currently evaluating */}
-      {
-    //   decision === "pending" && (
+      {decision === "pending" && (
         <div style={{ fontSize: 13.5, marginBottom: 14, color: "#000" }}>
           <span style={{ fontWeight: 800 }}>Currently evaluating: </span>
           <span style={{ color: C.slate }}>{evaluating.join(" · ")}</span>
         </div>
-    //   )
-      }
+      )}
 
-      {/* Next action - pending state (appears once evaluation completes) */}
+      {/* Next action - pending state (already waiting on screen mount) */}
       {decision === "pending" && showAction && (
         <div
           style={{
@@ -671,8 +641,8 @@ function BuySellResult({ budget = 50000, paused = false }) {
             }}
           >
             <span style={{ fontSize: 14.5, fontWeight: 800, color: "#000" }}>
-              Your review is needed: allocate ₹
-              {formatINR(pendingAmount)} to {stockName}?
+              Your review is needed: sell ₹
+              {formatINR(pendingAmount)} of {stockName}?
             </span>
             {expanded ? (
               <ChevronUp size={16} color={C.slate} />
@@ -702,9 +672,9 @@ function BuySellResult({ budget = 50000, paused = false }) {
                 }}
               >
                 {[
-                  "Strengthens your banking exposure",
-                  "Fits your moderate-risk profile",
-                  "Keeps HDFC Bank at 14% of your portfolio — within your 15% limit",
+                  "Reduces overexposure to your banking sector",
+                  "Locks in gains within your moderate-risk profile",
+                //   "Brings HDFC Bank back under your 15% allocation limit",
                 ].map((line) => (
                   <li
                     key={line}
@@ -729,7 +699,7 @@ function BuySellResult({ budget = 50000, paused = false }) {
                   marginBottom: 14,
                 }}
               >
-                Your rule: Ask before any purchase above ₹5,000
+                Your rule: Ask before any sale above ₹5,000
               </div> */}
 
               <div style={{ display: "flex", gap: 10 }}>
@@ -738,7 +708,7 @@ function BuySellResult({ budget = 50000, paused = false }) {
                   disabled={paused}
                   style={{
                     flex: 1,
-                    background: C.primary,
+                    background: C.red,
                     border: "none",
                     borderRadius: 10,
                     padding: "13px 0",
@@ -749,7 +719,7 @@ function BuySellResult({ budget = 50000, paused = false }) {
                     fontFamily: FONT,
                   }}
                 >
-                  Approve ₹{formatINR(pendingAmount)}
+                  Sell ₹{formatINR(pendingAmount)}
                 </button>
 
                 <button
@@ -783,7 +753,7 @@ function BuySellResult({ budget = 50000, paused = false }) {
             display: "flex",
             alignItems: "center",
             gap: 8,
-            background: C.primarySoft,
+            background: C.redSoft,
             borderRadius: 10,
             padding: "12px 14px",
             fontSize: 13.5,
@@ -792,8 +762,8 @@ function BuySellResult({ budget = 50000, paused = false }) {
             animation: "gw-fade-in 0.2s ease",
           }}
         >
-          <Check size={15} color={C.primary} strokeWidth={3} />
-          Approved ₹{formatINR(pendingAmount)} to {stockName}
+          <Check size={15} color={C.red} strokeWidth={3} />
+          Sold ₹{formatINR(pendingAmount)} of {stockName}
         </div>
       )}
 
@@ -804,7 +774,7 @@ function BuySellResult({ budget = 50000, paused = false }) {
             display: "flex",
             alignItems: "center",
             gap: 8,
-            background: "#FDEEEE",
+            background: C.bgSection,
             borderRadius: 10,
             padding: "12px 14px",
             fontSize: 13.5,
@@ -813,8 +783,8 @@ function BuySellResult({ budget = 50000, paused = false }) {
             animation: "gw-fade-in 0.2s ease",
           }}
         >
-          <X size={15} color={C.red} strokeWidth={3} />
-          Allocation rejected
+          <X size={15} color={C.slate} strokeWidth={3} />
+          Sale rejected
         </div>
       )}
 
@@ -970,9 +940,9 @@ function MarketCapResult() {
     <div>
       <div
         style={{
-          fontSize: 13.5,
-          fontWeight: 700,
-        //   fontFamily: FONT_DISPLAY,
+          fontSize: 22,
+          fontWeight: 800,
+          fontFamily: FONT_DISPLAY,
           color: "#000000",
           marginBottom: 16,
         }}
@@ -1081,9 +1051,9 @@ function SectorAllocationResult() {
     <div>
       <div
         style={{
-          fontSize: 13.5,
-          fontWeight: 700,
-        //   fontFamily: FONT_DISPLAY,
+          fontSize: 22,
+          fontWeight: 800,
+          fontFamily: FONT_DISPLAY,
           color: "#000000",
           marginBottom: 16,
         }}
@@ -1450,14 +1420,6 @@ function StopAgentModal({ onCancel, onConfirm }) {
       >
         <div
           style={{
-            width: 40,
-            height: 8,
-            display: "none",
-          }}
-        />
-
-        <div
-          style={{
             display: "flex",
             alignItems: "center",
             gap: 8,
@@ -1540,44 +1502,25 @@ function StopAgentModal({ onCancel, onConfirm }) {
 }
 
 // -----------------------------------------------------
-// Main Activity Screen
+// Main screen — landing page for the lock-screen notification tap.
+// Hardcoded contract: fixed budget, every permission granted, so the
+// full set of result cards renders without depending on Grant-screen
+// state being passed through the router.
 // -----------------------------------------------------
 
-export default function ActivityScreen() {
+export default function NotificationRedirectScreen() {
   const navigate = useNavigate();
-  const location = useLocation();
 
-  /*
-   * GrantScreen should pass its configuration through
-   * navigate("/activity", { state: { ... } })
-   */
+  // Hardcoded "granted contract" — this screen is a deep-link destination,
+  // not the normal flow, so it doesn't read location.state at all.
+  const budget = 50000;
+  const canResearch = false;
+  const canAnalyze = true;
+  const canRebalance = true;
+  const canBuy = true;
+  const canSell = true;
 
-  const grantData = (location.state && location.state.grantData) || {};
-
-  const budget = Number(grantData.amount) || 50000;
-
-  const permissions = grantData.permissions || [];
-
-  const permissionState = (id) => {
-    const permission = permissions.find(
-      (p) => p.id === id
-    );
-
-    return permission?.state === "yes";
-  };
-
-  const canResearch = permissionState("research");
-  const canAnalyze = "yes"
-  const canRebalance = permissionState("rebalance");
-  const canBuy = permissionState("buy");
-  const canSell = permissionState("sell");
-
-  const hasAnyActivity =
-    canResearch ||
-    canAnalyze ||
-    canRebalance ||
-    canBuy ||
-    canSell;
+  const hasAnyActivity = true;
 
   // -----------------------------------------------------
   // Stop agent state
@@ -1704,18 +1647,16 @@ export default function ActivityScreen() {
             padding: "16px 0 14px",
           }}
         >
-          <div
+          {/* <div
             style={{
               fontSize: 20,
               fontWeight: 800,
               color: "#000000",
-              fontFamily: FONT,
+              fontFamily: FONT_DISPLAY,
             }}
           >
-            {hasAnyActivity
-              ? ""
-              : "No actions delegated"}
-          </div>
+            Your agent is working
+          </div> */}
 
           <div
             style={{
@@ -1725,45 +1666,23 @@ export default function ActivityScreen() {
               lineHeight: 1.4,
             }}
           >
-            {hasAnyActivity
-              ? "Check the progress of your agent's delegated actions below."
-              : "Return to the previous screen to grant the agent some permissions."}
+            Check the progress of your agent's delegated actions below.
           </div>
         </div>
 
         {/* -------------------------------------------------
-            BUY / SELL — ALWAYS FIRST
+            BUY / SELL — ALWAYS FIRST — showing the sell checkpoint
         -------------------------------------------------- */}
 
         {(canBuy || canSell) && (
           <BuySellActivityCard
             title="Allocation"
-            progressLines={
-              canBuy && canSell
-                ? [
-                    "Reviewing your portfolio",
-                    "Evaluating buy opportunities",
-                    "Checking sell candidates",
-                  ]
-                : canBuy
-                  ? [
-                      "Reviewing your portfolio",
-                      "Scanning for buy opportunities",
-                      "Checking your investment limits",
-                    ]
-                  : [
-                      "Reviewing your holdings",
-                      "Identifying sell candidates",
-                      "Checking your permissions",
-                    ]
-            }
-            result={
-              <BuySellResult
-                budget={budget}
-                buyEnabled={canBuy}
-                sellEnabled={canSell}
-              />
-            }
+            progressLines={[
+              "Reviewing your portfolio",
+              "Evaluating buy opportunities",
+              "Checking sell candidates",
+            ]}
+            result={<SellResult budget={budget} />}
           />
         )}
 
@@ -1847,21 +1766,6 @@ export default function ActivityScreen() {
               />
             }
           />
-        )}
-
-        {!hasAnyActivity && (
-          <div
-            style={{
-              border: `1.5px solid ${C.border}`,
-              borderRadius: 14,
-              padding: 18,
-              textAlign: "center",
-              color: C.slate,
-              fontSize: 12.5,
-            }}
-          >
-            No agent activity has been enabled.
-          </div>
         )}
       </div>
 
