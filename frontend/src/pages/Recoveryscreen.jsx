@@ -173,7 +173,7 @@ export default function RecoveryScreen({
           {/* Status card — detection logic unchanged */}
           <div
             style={{
-              border: `1.5px solid ${C.urgent}`,
+              border: `1.5px solid ${C.red}`,
               borderRadius: 18,
               padding: 20,
               marginBottom: 16,
@@ -186,14 +186,14 @@ export default function RecoveryScreen({
                   width: 40,
                   height: 40,
                   borderRadius: "50%",
-                  background: C.urgentSoft,
+                  background: C.redSoft,
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
                   flexShrink: 0,
                 }}
               >
-                <AlertTriangle size={19} color={C.urgent} strokeWidth={2.2} />
+                <AlertTriangle size={19} color={C.red} strokeWidth={2.2} />
               </div>
               <div>
                 <div
@@ -201,7 +201,7 @@ export default function RecoveryScreen({
                     fontSize: 10.5,
                     fontWeight: 800,
                     letterSpacing: 0.4,
-                    color: C.urgent,
+                    color: C.red,
                     textTransform: "uppercase",
                     marginBottom: 2,
                   }}
@@ -216,7 +216,7 @@ export default function RecoveryScreen({
 
             <div style={{ fontSize: 13.5, color: "#000000", lineHeight: 1.5, marginBottom: 14 }}>
               <span style={{ fontWeight: 700 }}>{stockName}</span> now totals ₹{formatINR(totalHeld)} —{" "}
-              <span style={{ fontWeight: 700, color: C.urgent }}>{currentPct}%</span> of your portfolio,
+              <span style={{ fontWeight: 700, color: C.red }}>{currentPct}%</span> of your portfolio,
               above your {limitPct}% limit for Banking & Financials sector.
             </div>
 
