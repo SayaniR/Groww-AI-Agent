@@ -295,6 +295,155 @@ function ActivityCard({
   );
 }
 
+// function BuySellActivityCard({
+//   title,
+//   status = "running",
+//   progressLines = [],
+//   result = null,
+//   paused: pausedProp,
+//   onPauseChange,
+// }) {
+//   const [internalPaused, setInternalPaused] = useState(false);
+//   const isControlled = pausedProp !== undefined;
+//   const paused = isControlled ? pausedProp : internalPaused;
+
+//   const togglePause = () => {
+//     const next = !paused;
+//     if (onPauseChange) onPauseChange(next);
+//     if (!isControlled) setInternalPaused(next);
+//   };
+
+//   // Inject `paused` into the result element so children like BuySellResult
+//   // can react to it without each caller having to wire it manually.
+//   const resultWithPaused =
+//     result && isValidElement(result)
+//       ? cloneElement(result, { paused, ...result.props })
+//       : result;
+
+//   return (
+//     <div
+//       style={{
+//         fontFamily: FONT,
+//         maxWidth: 480,
+//         margin: "0 auto",
+//         marginBottom: 12,
+//         background: "#FFFFFF",
+//         border: `1px solid ${C.border}`,
+//         borderRadius: 18,
+//         padding: 20,
+//       }}
+//     >
+//       {/* Header */}
+//       <div
+//         style={{
+//           display: "flex",
+//           justifyContent: "space-between",
+//           alignItems: "center",
+//           marginBottom: 16,
+//         }}
+//       >
+//         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+//           <span style={{ fontSize: 19, fontWeight: 800, color: C.ink }}>
+//             {title}
+//           </span>
+
+//           {status === "done" && (
+//             <span
+//               style={{
+//                 display: "flex",
+//                 alignItems: "center",
+//                 gap: 4,
+//                 background: C.primarySoft,
+//                 color: C.primary,
+//                 fontSize: 11.5,
+//                 fontWeight: 800,
+//                 borderRadius: 999,
+//                 padding: "3px 10px",
+//               }}
+//             >
+//               <Check size={11} strokeWidth={3} />
+//               Done
+//             </span>
+//           )}
+//         </div>
+
+//         <button
+//           onClick={togglePause}
+//           style={{
+//             display: "flex",
+//             alignItems: "center",
+//             gap: 6,
+//             border: `1px solid ${C.border}`,
+//             borderRadius: 999,
+//             background: "#FFFFFF",
+//             padding: "7px 14px",
+//             fontSize: 13,
+//             fontWeight: 700,
+//             color: C.ink,
+//             cursor: "pointer",
+//             fontFamily: FONT,
+//           }}
+//         >
+//           {paused ? (
+//             <>
+//               <Play size={13} />
+//               Resume
+//             </>
+//           ) : (
+//             <>
+//               <Pause size={13} />
+//               Pause
+//             </>
+//           )}
+//         </button>
+//       </div>
+
+//       {/* Progress checklist — shown until a result is available */}
+//       {!result && progressLines.length > 0 && (
+//         <div>
+//           {progressLines.map((line, i) => (
+//             <div
+//               key={line}
+//               style={{
+//                 display: "flex",
+//                 alignItems: "center",
+//                 gap: 8,
+//                 fontSize: 13.5,
+//                 color: i === 0 ? C.ink : C.slate,
+//                 fontWeight: i === 0 ? 700 : 500,
+//                 marginBottom: 10,
+//                 opacity: paused ? 0.5 : 1,
+//               }}
+//             >
+//               <span
+//                 style={{
+//                   width: 6,
+//                   height: 6,
+//                   borderRadius: "50%",
+//                   background: i === 0 ? C.primary : C.border,
+//                   flexShrink: 0,
+//                 }}
+//               />
+//               {line}
+//             </div>
+//           ))}
+//         </div>
+//       )}
+
+//       {/* Result content, rendered without its own card chrome */}
+//       {result && (
+//         <div style={{ opacity: paused ? 0.55 : 1, transition: "opacity 0.2s ease" }}>
+//           {resultWithPaused}
+//         </div>
+//       )}
+//     </div>
+//   );
+// }
+
+// -----------------------------------------------------
+// Buy / Sell result
+// -----------------------------------------------------
+
 function BuySellActivityCard({
   title,
   status = "running",
@@ -302,8 +451,10 @@ function BuySellActivityCard({
   result = null,
   paused: pausedProp,
   onPauseChange,
+  duration = 2500, // how long to show the progress checklist before revealing result
 }) {
   const [internalPaused, setInternalPaused] = useState(false);
+  const [loading, setLoading] = useState(true);
   const isControlled = pausedProp !== undefined;
   const paused = isControlled ? pausedProp : internalPaused;
 
@@ -313,16 +464,21 @@ function BuySellActivityCard({
     if (!isControlled) setInternalPaused(next);
   };
 
-  // Inject `paused` into the result element so children like BuySellResult
-  // can react to it without each caller having to wire it manually.
+  // Only counts down while not paused — pausing genuinely freezes progress,
+  // it doesn't just dim the UI.
+  useEffect(() => {
+    if (paused) return;
+    const timer = setTimeout(() => setLoading(false), duration);
+    return () => clearTimeout(timer);
+  }, [paused, duration]);
+
   const resultWithPaused =
     result && isValidElement(result)
       ? cloneElement(result, { paused, ...result.props })
       : result;
 
   return (
-    <div
-      style={{
+    <div style={{
         fontFamily: FONT,
         maxWidth: 480,
         margin: "0 auto",
@@ -331,45 +487,19 @@ function BuySellActivityCard({
         border: `1px solid ${C.border}`,
         borderRadius: 18,
         padding: 20,
-      }}
-    >
-      {/* Header */}
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          marginBottom: 16,
-        }}
-      >
+      }}>
+      {/* Header — unchanged */}
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <span style={{ fontSize: 19, fontWeight: 800, color: C.ink }}>
-            {title}
-          </span>
-
-          {status === "done" && (
-            <span
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: 4,
-                background: C.primarySoft,
-                color: C.primary,
-                fontSize: 11.5,
-                fontWeight: 800,
-                borderRadius: 999,
-                padding: "3px 10px",
-              }}
-            >
+          <span style={{ fontSize: 19, fontWeight: 800, color: C.ink }}>{title}</span>
+          {!loading && status === "done" && (
+            <span style={{ /* ...unchanged... */ }}>
               <Check size={11} strokeWidth={3} />
               Done
             </span>
           )}
         </div>
-
-        <button
-          onClick={togglePause}
-          style={{
+        <button onClick={togglePause} style={{
             display: "flex",
             alignItems: "center",
             gap: 6,
@@ -382,24 +512,13 @@ function BuySellActivityCard({
             color: C.ink,
             cursor: "pointer",
             fontFamily: FONT,
-          }}
-        >
-          {paused ? (
-            <>
-              <Play size={13} />
-              Resume
-            </>
-          ) : (
-            <>
-              <Pause size={13} />
-              Pause
-            </>
-          )}
+          }}>
+          {paused ? <><Play size={13} />Resume</> : <><Pause size={13} />Pause</>}
         </button>
       </div>
 
-      {/* Progress checklist — shown until a result is available */}
-      {!result && progressLines.length > 0 && (
+      {/* Progress checklist — shown while loading, same trace pattern as ActivityCard */}
+      {loading && progressLines.length > 0 && (
         <div>
           {progressLines.map((line, i) => (
             <div
@@ -415,23 +534,15 @@ function BuySellActivityCard({
                 opacity: paused ? 0.5 : 1,
               }}
             >
-              <span
-                style={{
-                  width: 6,
-                  height: 6,
-                  borderRadius: "50%",
-                  background: i === 0 ? C.primary : C.border,
-                  flexShrink: 0,
-                }}
-              />
+              <span style={{ width: 6, height: 6, borderRadius: "50%", background: i === 0 ? C.primary : C.border, flexShrink: 0 }} />
               {line}
             </div>
           ))}
         </div>
       )}
 
-      {/* Result content, rendered without its own card chrome */}
-      {result && (
+      {/* Result — only once loading has actually finished */}
+      {!loading && result && (
         <div style={{ opacity: paused ? 0.55 : 1, transition: "opacity 0.2s ease" }}>
           {resultWithPaused}
         </div>
@@ -439,11 +550,6 @@ function BuySellActivityCard({
     </div>
   );
 }
-
-// -----------------------------------------------------
-// Buy / Sell result
-// -----------------------------------------------------
-
 function ResultItem({ name, detail, amount }) {
   return (
     <div
